@@ -1,6 +1,6 @@
 import { ThemeProvider } from 'styled-components';
 
-const fontSizes: any = [14, 18, 20, 26];
+const fontSizes: any = [14, 18, 20, 96];
 fontSizes.body = fontSizes[0];
 fontSizes.bodyLarge = fontSizes[1];
 fontSizes.bodyExtraLarge = fontSizes[2];
@@ -11,6 +11,10 @@ const secondary = '#F9B531';
 
 const theme = {
   fontSizes,
+  fonts: {
+    primary: 'Raleway',
+    secondary: 'Roboto',
+  },
   colors: {
     primary,
     secondary,
