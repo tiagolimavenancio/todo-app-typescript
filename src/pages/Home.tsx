@@ -1,27 +1,27 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, Text, Button, Row, Column, List, Logo, Icon } from 'components';
+import { useTodo } from 'hooks';
 
 const SECONDS_DEFAULT = 5;
 
 export const Home = () => {
+  const { tasks, getTodos, createTodo, updateTodo } = useTodo();
+
   const [taskName, setTaskName] = useState('');
-  const [tasks, setTasks] = useState<{ label: string }[]>([]);
   const [seconds, setSeconds] = useState(SECONDS_DEFAULT);
   const [timer, setTimer] = useState<any>();
   const [stage, setStage] = useState('ready');
+  const [taskIndex, setTaskIndex] = useState(0);
 
-  const handleOK = () => {
-    if (!taskName) {
-      return;
-    }
+  useEffect(() => {
+    getTodos();
+  }, [getTodos]);
 
-    setTasks((previous) => {
-      const copy = [...previous];
-      copy.push({ label: taskName });
-      return copy;
-    });
+  const handleOK = useCallback(async () => {
+    await createTodo({ title: taskName, completed: false });
+    await getTodos();
     setTaskName('');
-  };
+  }, [taskName, createTodo, getTodos]);
 
   const secondsToTime = (secs: number) => {
     const divisorMinutes = secs % 3600;
@@ -72,6 +72,14 @@ export const Home = () => {
     setStage('ready');
   }, [handlePause]);
 
+  const handleDone = useCallback(async () => {
+    const task = tasks[taskIndex];
+    if (task) {
+      await updateTodo(`${task.id}`, { ...task, completed: true });
+      await getTodos();
+    }
+  }, [tasks, taskIndex, updateTodo, getTodos]);
+
   const handleStageStatus = useMemo(() => {
     switch (stage) {
       case 'ready':
@@ -100,12 +108,6 @@ export const Home = () => {
               <Button variant="primary" p="10px 20px" mx="5px" onClick={handleStop}>
                 <Icon variant="stop" />
               </Button>
-              <Button variant="primary" p="10px 20px" mx="5px" onClick={startTimer}>
-                <Icon variant="restart" />
-              </Button>
-              <Button variant="primary" p="10px 20px" mx="5px">
-                <Icon variant="done" />
-              </Button>
             </Row>
           </>
         );
@@ -116,7 +118,7 @@ export const Home = () => {
               <Button variant="primary" p="10px 20px" mx="5px" onClick={handleRestart}>
                 <Icon variant="restart" />
               </Button>
-              <Button variant="primary" p="10px 20px" mx="5px">
+              <Button variant="primary" p="10px 20px" mx="5px" onClick={handleDone}>
                 <Icon variant="done" />
               </Button>
             </Row>
@@ -134,7 +136,7 @@ export const Home = () => {
           </>
         );
     }
-  }, [stage, handlePause, handleStop, handleRestart]);
+  }, [stage, handlePause, handleStop, handleRestart, handleDone]);
 
   return (
     <Column width="680px" margin="0 auto">
@@ -173,7 +175,7 @@ export const Home = () => {
         <Button onClick={handleOK}>OK</Button>
       </Row>
 
-      <List items={tasks} />
+      <List items={tasks} selectedIndex={taskIndex} onClick={setTaskIndex} />
     </Column>
   );
 };
